@@ -1,4 +1,3 @@
-
 {project_title}
 {project_title_bar}
 
@@ -8,7 +7,7 @@
    :titlesonly:
    :glob:
 
-   libraries/*.rst
+   libraries/**
 
 Indices and tables
 ==================

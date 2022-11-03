@@ -2,6 +2,7 @@
 an HTML documentation website.
 """
 import sys
+import os
 from inflection import titleize
 from typing import List
 from invoke import task
@@ -25,7 +26,7 @@ COMPONENT_PATH = DOC_PATH / "components"
 LIBRARIES_PATH = DOC_SOURCE_PATH / "libraries"
 SOURCE_INCLUDES = DOC_SOURCE_PATH / "include"
 LIBDOC_PATH = SOURCE_INCLUDES / "libdoc"
-LIBDOC_TEMPLATE = DOC_SOURCE_PATH / "template" / "libdoc.html"
+LIBDOC_TEMPLATE = DOC_SOURCE_PATH / "template" / "libdoc" / "libdoc.html"
 LIBSPEC_PATH = DOC_SOURCE_PATH / "libspec"
 JSON_PATH = DOC_SOURCE_PATH / "json"
 JSON_MERGE_TARGET = SOURCE_INCLUDES / "latest.json"
@@ -76,32 +77,14 @@ def generate_documentation(
      select alternatives such as ``robot``, ``html``, or ``text``. If a
      library specifies it's documentation format
     """
-
-    """TODO:
-    May not need to import the modules to perform this work.
-
-    For the happy path: 
-
-     - Get names of all .py files.
-     - run docgen with a or glob for each py file name or run
-       docgen once for each py file.
-     - Create template rst files for each py file where it does
-       an automodule of that file. These files live in a new
-       ``libs`` directory in source.
-     - Use a toctree directive in the index to include all rst
-       files from ``libs``.
-
-    If the py file does not have classes in it, automodule should
-    still handle it, but docgen may fail.
-    
-    """
     source_path = source_path or DEFAULT_SOURCE
     source_path = Path(source_path).resolve()
     if not source_path.is_dir():
         raise ValueError("Source path must be a directory")
     if not source_path.exists():
         raise ValueError("Source path does not exist")
-    sys.path.append(str(source_path))
+    os.environ["PYTHONPATH"] += f"{os.pathsep}{source_path}"
+    print(sys.path)
     source_dir = SourceDirectory(
         source_path,
         documentation_type=language,

@@ -90,7 +90,7 @@ class Component(SourceFile):
         target_path: Optional[PathLike] = None,
         **kwargs,
     ) -> None:
-        self.target_path: Path = Path(target_path)
+        self.target_path = target_path
         super().__init__(
             *args,
             documentation_type=documentation_type,
@@ -112,8 +112,11 @@ class Component(SourceFile):
         return self._target
 
     @target_path.setter
-    def target_path(self, value: PathLike):
-        self._target = self._append_file_name(value)
+    def target_path(self, value: Union[PathLike, None]):
+        if value is None:
+            self._target = Path(".")
+        else:
+            self._target: Path = self._append_file_name(value)
 
     def write(self, target: PathLike = None) -> None:
         """Write the contents to disk"""
