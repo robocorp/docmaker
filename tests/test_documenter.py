@@ -14,6 +14,6 @@ def test_importing_modules():
     my_directory = documenter.SourceDirectory(TEST_LIBS)
     my_source_files = [f for f in my_directory.source_files]
     print(my_source_files)
-    my_modules = [f.imported_module for f in my_directory.source_files]
+    my_modules = [f.name for f in my_directory.source_files]
     print(my_modules)
     assert "my_sub_library" in my_modules

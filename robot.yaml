@@ -1,10 +1,6 @@
-# For more details on the format and content:
-# https://github.com/robocorp/rcc/blob/master/docs/recipes.md#what-is-in-robotyaml
-
 tasks:
-  # Task names here are used when executing the bots, so renaming these is recommended.
-  Run Python:
-    shell: python task.py
+  Build documentation:
+    shell: invoke generate-documentation 
 
 condaConfigFile: conda.yaml
 

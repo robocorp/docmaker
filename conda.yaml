@@ -24,4 +24,4 @@ dependencies:
       # Define pip packages here -> https://pypi.org/
       - robotframework-docgen==0.15.0    # https://github.com/robocorp/robotframework-docgen
       - robotframeworklexer==1.1         # https://github.com/robotframework/pygmentslexer
-
+      - inflection==0.5.1                # https://inflection.readthedocs.io/en/latest/#changelog

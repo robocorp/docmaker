@@ -1,12 +1,14 @@
 
-Welcome to {project_title}'s documentation!
-======================================================
+{project_title}
+{project_title_bar}
 
 .. toctree::
-   :maxdepth: 4
-   :caption: Contents:
+   :maxdepth: 2
+   :caption: Libraries
+   :titlesonly:
+   :glob:
 
-{libraries}
+   libraries/*.rst
 
 Indices and tables
 ==================

@@ -21,3 +21,4 @@ docs/source/include/libdoc
 docs/source/libspec
 docs/source/include/latest.json
 docs/source/json/
+source/*
