@@ -11,6 +11,7 @@ dependencies:
   - python=3.9.13               # https://pyreadiness.org/3.9/ 
   - sphinx=5.3.0                # https://github.com/conda-forge/sphinx-feedstock
   - invoke=1.7.3                # https://www.pyinvoke.org/changelog.html#{}
+  - pyyaml=5.4.1                # https://pyyaml.org/wiki/PyYAML
 
   # development dependencies
   - black=22.10.0               # https://black.readthedocs.io/en/stable/change_log.html
