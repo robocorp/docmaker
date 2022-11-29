@@ -25,3 +25,4 @@ source/*
 docs/source/libraries/*
 dist/
 docs/source/index.rst
+rcc.exe
