@@ -26,3 +26,5 @@ docs/source/libraries/*
 dist/
 docs/source/index.rst
 rcc.exe
+temp_conda.yaml
+temp_robot.yaml

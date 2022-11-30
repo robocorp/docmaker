@@ -200,15 +200,20 @@ def generate_documentation(
     if not in_project:
         _merge_config_files(source_path, source_robot)
         rcc_exe = _download_rcc(ctx)
+        # TODO: refactor to not pass parameters with string value "None"
+        args = []
+        if source_path is not None:
+            args.append(f"--source-path {source_path}")
+        if len(include) > 0:
+            args.append(f"--include {','.join(include)}")
+        if project_title is not None:
+            args.append(f"--project-title {project_title}")
         ctx.run(
             f"{rcc_exe} run --space metarobot --robot {TEMP_ROBOT} "
             f'--task "Build documentation" --'
-            f" --source-path {source_path}"
-            f" --include {','.join(include)}"
-            f" --project-title {project_title}"
             f" --language {language}"
             f" --documentation-format {documentation_format}"
-            f" --in-project",
+            f" --in-project {' '.join(args)}",
             echo=True,
         )
     else:
