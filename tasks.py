@@ -4,11 +4,13 @@ an HTML documentation website.
 import sys
 import platform
 import os
+import shutil
 import yaml
 from inflection import titleize
 from typing import List, Dict
 from invoke import task
 from pathlib import Path
+from glob import glob
 from importlib import __import__
 
 # custom classes
@@ -40,6 +42,19 @@ TEMP_DIR = REPO_ROOT / "temp"
 TEMP_CONDA = REPO_ROOT / "temp_conda.yaml"
 TEMP_ROBOT = REPO_ROOT / "temp_robot.yaml"
 
+CLEAN_PATTERNS = [
+    "temp",
+    "output",
+    "rcc.exe",
+    "temp_*.yaml",
+    "docs/source/json",
+    "docs/source/libspec",
+    "docs/source/index.rst",
+    "docs/source/libraries/*.rst",
+    "docs/source/include/libdoc",
+    "docs/source/include/latest.json",
+]
+
 
 def _parse_commas(param: List[str]) -> List[str]:
     """Extends a param if comma-separated values were included"""
@@ -66,24 +81,42 @@ def _get_source_path(source_path=None):
 def _merge_lists(original_list: List, other_list: List):
     original_list.extend(
         [
-            item
+            str(item)
             for item in other_list
-            if isinstance(item, str) and str(item).lower() not in original_list
+            if (isinstance(item, str) or isinstance(item, Path))
+            and str(item).lower() not in original_list
         ]
     )
 
 
-def _merge_yaml(original_yaml: Dict, other_yaml: Dict):
+def _merge_path_lists(original_list: List, other_list: List, other_path: PathLike):
+    other_path = Path(other_path)
+    other_paths = []
+    for path in other_list:
+        other_paths.append((other_path.parent / path).resolve())
+    _merge_lists(original_list, other_paths)
+
+
+def _merge_yaml(original_yaml: Dict, other_yaml: Dict, other_yaml_path: PathLike):
+    other_yaml_path = Path(other_yaml_path)
     if other_yaml.get("PATH", False):
-        _merge_lists(original_yaml["PATH"], other_yaml["PATH"])
+        _merge_path_lists(original_yaml["PATH"], other_yaml["PATH"], other_yaml_path)
     if other_yaml.get("PYTHONPATH", False):
-        _merge_lists(original_yaml["PYTHONPATH"], other_yaml["PYTHONPATH"])
+        _merge_path_lists(
+            original_yaml["PYTHONPATH"], other_yaml["PYTHONPATH"], other_yaml_path
+        )
     if other_yaml.get("dependencies", False):
         _merge_lists(original_yaml["dependencies"], other_yaml["dependencies"])
-        if "pip" in other_yaml["dependencies"]:
-            _merge_lists(
-                original_yaml["dependencies"]["pip"], other_yaml["dependencies"]["pip"]
-            )
+
+        for d in [i for i in other_yaml["dependencies"] if isinstance(i, dict)]:
+            if d.get("pip", False):
+                orig_pip = [
+                    i
+                    for i in original_yaml["dependencies"]
+                    if isinstance(i, dict)
+                    and getattr(i, "get", lambda x, y: False)("pip", False)
+                ][0]
+                _merge_lists(orig_pip["pip"], d["pip"])
 
 
 def _merge_config_files(source_path: PathLike = None, robot_file: PathLike = None):
@@ -103,10 +136,11 @@ def _merge_config_files(source_path: PathLike = None, robot_file: PathLike = Non
     my_robot_yaml = yaml.safe_load(MY_ROBOT.read_text())
     my_conda_yaml = yaml.safe_load(MY_CONDA.read_text())
 
-    _merge_yaml(my_robot_yaml, source_robot_yaml)
-    _merge_yaml(my_conda_yaml, source_conda_yaml)
+    _merge_yaml(my_robot_yaml, source_robot_yaml, source_robot_path)
+    _merge_yaml(my_conda_yaml, source_conda_yaml, source_conda_path)
 
-    my_robot_yaml["condaConfigFile"] = str(TEMP_CONDA)
+    my_robot_yaml["condaConfigFile"] = str(TEMP_CONDA.name)
+    my_robot_yaml.pop("environmentConfigs")
 
     if not TEMP_DIR.exists():
         TEMP_DIR.mkdir(exist_ok=True)
@@ -191,6 +225,7 @@ def generate_documentation(
      this package from inside your own robot/project and have installed
      all of this project's dependencies in your own conda.yaml.
     """
+    print("**** START ****")
     yaml_config = _parse_yaml_config()
     try:
         source_path = source_path or yaml_config.get("source_path")
@@ -207,6 +242,7 @@ def generate_documentation(
         pass
     source_path = _get_source_path(source_path)
     if not in_project:
+        print("DETECTED OUTSIDE OF PROJECT: MERGING DEPENDENCY FILES")
         _merge_config_files(source_path, source_robot)
         rcc_exe = _download_rcc(ctx)
         args = []
@@ -218,8 +254,9 @@ def generate_documentation(
             args.append(f"--exclude {','.join(exclude)}")
         if project_title is not None:
             args.append(f"--project-title {project_title}")
+        print("EXECUTING META ROBOT")
         ctx.run(
-            f"{rcc_exe} run --space metarobot --robot {TEMP_ROBOT} "
+            f"{rcc_exe} run --force --space metarobot --robot {TEMP_ROBOT} "
             f'--task "Build documentation" --'
             f" --language {language}"
             f" --documentation-format {documentation_format}"
@@ -227,6 +264,7 @@ def generate_documentation(
             echo=True,
         )
     else:
+        print("INSIDE PROJECT: BEGINNING TO PARSE DOCS")
         os.environ["PYTHONPATH"] += f"{os.pathsep}{source_path}"
         source_dir = SourceDirectory(
             source_path,
@@ -238,11 +276,10 @@ def generate_documentation(
             for name in include:
                 source_dir.load_source_file(name)
 
-        if exclude:
-            exclude = _parse_commas(exclude)
-            exclude.append(REPO_ROOT)
-            for name in exclude:
-                source_dir.exclude_source_file(name)
+        exclude = _parse_commas(exclude)
+        exclude.append(REPO_ROOT)
+        for name in exclude:
+            source_dir.exclude_source_file(name)
 
         # write the source index file
         title = project_title or source_path.name
@@ -258,6 +295,7 @@ def generate_documentation(
         root_index_component.write(DOC_SOURCE_PATH)
 
         # build all source doc files from components for each sourcedoc
+        print(f"Source files to be parsed: {source_dir.source_files}")
         for doc in source_dir.source_files:
             file_component = Component(
                 COMPONENT_PATH / f"{language.lower()}_library_index.rst",
@@ -311,3 +349,16 @@ def parse_yaml_config_and_run(ctx, path="docmaker_config.yaml"):
     """
     config = _parse_yaml_config(path)
     generate_documentation(ctx, **config)
+
+
+@task
+def clean(ctx):
+    """Cleans the local repository folder of build artifacts."""
+    for pattern in CLEAN_PATTERNS:
+        for path in glob(pattern, recursive=True):
+            print(f"Removing: {path}")
+            shutil.rmtree(path, ignore_errors=True)
+            try:
+                os.remove(path)
+            except OSError:
+                pass

@@ -9,6 +9,9 @@ tasks:
   Host documentation:
     shell: python -u -m http.server -d output
 
+  Clean local repo:
+    shell: invoke clean
+
 condaConfigFile: conda.yaml
 
 environmentConfigs:

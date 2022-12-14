@@ -56,6 +56,13 @@ class Source:
         else:
             return False
 
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}(path={self.path!r}, "
+            f"documentation_type={self.documentation_type!r}, "
+            f"documentation_format={self.documentation_format!r})"
+        )
+
 
 class SourceFile(Source):
     """Represents a source file used to build library documentation"""
@@ -269,17 +276,23 @@ class SourceDirectory(Source):
         and names can be provided as paths or using python dot-notation.
         """
         doc_to_exclude = self._create_source_doc(name)
+        print(f"Doc to exclude: {doc_to_exclude}")
         source_files = self.source_files
+        files_to_remove = []
         if doc_to_exclude.path.is_file():
-            # TODO: implement equals method for SourceDoc that marks equal if same path.
-            source_files.remove(doc_to_exclude)
+            print("Doc is a file, attempting to remove directly")
+            files_to_remove.append(doc_to_exclude)
         elif doc_to_exclude.path.is_dir():
-            files_to_remove = []
+            print("doc is a dir, attempting to remove all files in dir")
             for file in source_files:
                 if file.path.is_relative_to(doc_to_exclude.path):
+                    print(f"Found relative file to remove: {file}")
                     files_to_remove.append(file)
-            for file in files_to_remove:
+        for file in files_to_remove:
+            try:
                 source_files.remove(file)
+            except ValueError:
+                print(f"The file '{file}' could not be excluded from source files.")
 
     @property
     def source_files(self) -> List[SourceDoc]:
