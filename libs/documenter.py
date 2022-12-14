@@ -50,6 +50,12 @@ class Source:
         parent_name, _, source_name = name.rpartition(".")
         return parent_name, source_name
 
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o, Source):
+            return self.path == __o.path
+        else:
+            return False
+
 
 class SourceFile(Source):
     """Represents a source file used to build library documentation"""
