@@ -50,7 +50,7 @@ def _parse_commas(param: List[str]) -> List[str]:
 
 
 def _get_source_path(source_path=None):
-    """Attempts to get the source path provided or or selects the proper
+    """Attempts to get the source path provided or selects the proper
     default.
     """
     source_path = source_path or DEFAULT_SOURCE
@@ -138,12 +138,13 @@ def _download_rcc(ctx):
         return "./rcc"
 
 
-@task(iterable=["include"], aliases=["build", "docs", "build-docs"])
+@task(iterable=["include", "exclude"], aliases=["build", "docs", "build-docs"])
 def generate_documentation(
     ctx,
     source_path=None,
     source_robot=None,
     include=None,
+    exclude=None,
     project_title=None,
     language="rfw",
     documentation_format="rest",
@@ -151,6 +152,10 @@ def generate_documentation(
 ):
     """This task generates a documentation website
     for all modules in ``source_path``.
+
+    You can also set these parameters via the config file ``docmaker_config.yaml``,
+    but if both command line and config file is used, command line takes
+    precedence.
 
     :param source_path: Optional. Defines a path to source files. All
      files within this path will be parsed for documentation. Defaults
@@ -161,6 +166,9 @@ def generate_documentation(
     :param include: Optional. List of Python modules to parse from
      ``source_path``. If not included, all modules will be parsed for
      documentation. These can be provided using Python dot-notation
+     or as paths to the individual source files.
+    :param exclude: Optional. List of Python modules to be excluded
+     from parsing. These can be provided using Python dot-notation
      or as paths to the individual source files.
     :param project_title: If provided, the documentation will use this
      string as it's main title, otherwise it will Titleize the name
@@ -188,6 +196,7 @@ def generate_documentation(
         source_path = source_path or yaml_config.get("source_path")
         source_robot = source_robot or yaml_config.get("source_robot")
         include = include or yaml_config.get("include")
+        exclude = exclude or yaml_config.get("exclude")
         project_title = project_title or yaml_config.get("project_title")
         language = language or yaml_config.get("language")
         documentation_format = documentation_format or yaml_config.get(
@@ -200,12 +209,13 @@ def generate_documentation(
     if not in_project:
         _merge_config_files(source_path, source_robot)
         rcc_exe = _download_rcc(ctx)
-        # TODO: refactor to not pass parameters with string value "None"
         args = []
         if source_path is not None:
             args.append(f"--source-path {source_path}")
         if len(include) > 0:
             args.append(f"--include {','.join(include)}")
+        if len(exclude) > 0:
+            args.append(f"--exclude {','.join(exclude)}")
         if project_title is not None:
             args.append(f"--project-title {project_title}")
         ctx.run(
@@ -227,6 +237,12 @@ def generate_documentation(
             include = _parse_commas(include)
             for name in include:
                 source_dir.load_source_file(name)
+
+        if exclude:
+            exclude = _parse_commas(exclude)
+            exclude.append(REPO_ROOT)
+            for name in exclude:
+                source_dir.exclude_source_file(name)
 
         # write the source index file
         title = project_title or source_path.name

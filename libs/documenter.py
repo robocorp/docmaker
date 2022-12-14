@@ -233,22 +233,47 @@ class SourceDirectory(Source):
             else:
                 return possible_path
 
+    def _create_source_doc(self, name: Union[str, PathLike]) -> SourceDoc:
+        new_sourcedoc = SourceDoc(name)
+        if not new_sourcedoc.path.exists():
+            return SourceDoc(self.convert_name_to_path(name))
+        elif new_sourcedoc.path.is_dir():
+            return SourceDoc(self._get_init_path_for_dir(name))
+        else:
+            return new_sourcedoc
+
     def load_source_file(self, name: Union[str, PathLike]):
         """Loads the provided source file from within the source directory
 
-        Relative names to the this source directory's root can be provided
+        Relative names to this source directory's root can be provided
         and names can be provided as paths or using python dot-notation.
         """
-        new_sourcedoc = SourceDoc(name)
-        if not new_sourcedoc.path.exists():
-            new_sourcedoc = SourceDoc(self.convert_name_to_path(name))
-        elif new_sourcedoc.path.is_dir():
-            new_sourcedoc = SourceDoc(self._get_init_path_for_dir(name))
+        new_sourcedoc = self._create_source_doc(name)
         if new_sourcedoc.path.is_file():
             if self._source_files is None:
                 self._source_files = [new_sourcedoc]
             else:
                 self._source_files.append(new_sourcedoc)
+
+    def exclude_source_file(self, name: Union[str, PathLike]):
+        """Excludes the provided source file from the list of source
+        files, if not yet loaded, it will load them first.
+
+        Relative names to this source directory's root can be provided
+        and names can be provided as paths or using python dot-notation.
+        """
+        doc_to_exclude = self._create_source_doc(name)
+        source_files = self.source_files
+        if doc_to_exclude.path.is_file():
+            # TODO: implement equals method for SourceDoc that marks equal if same path.
+            source_files.remove(doc_to_exclude)
+        elif doc_to_exclude.path.is_dir():
+            files_to_remove = []
+            for file in source_files:
+                if file.path.is_relative_to(doc_to_exclude.path):
+                    files_to_remove.append(file)
+            for file in files_to_remove:
+                source_files.remove(file)
 
     @property
     def source_files(self) -> List[SourceDoc]:
