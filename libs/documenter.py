@@ -6,7 +6,6 @@ from importlib.machinery import SourceFileLoader
 from importlib.util import spec_from_loader, module_from_spec
 
 VALID_DOC_TYPES = ["python", "rfw"]
-VALID_DOC_FORMATS = ["robot", "html", "text", "rest"]
 SOURCE_LANGUAGES = {".py": "python", ".robot": "rfw", ".resource": "rfw"}
 
 PathLike = Union[Path, str]
@@ -19,7 +18,6 @@ class Source:
         self,
         *args,
         documentation_type: Optional[str] = None,
-        documentation_format: Optional[str] = None,
         **kwargs,
     ) -> None:
         if (
@@ -31,15 +29,6 @@ class Source:
                 f"valid, must be one of {VALID_DOC_TYPES}"
             )
         self.documentation_type: Optional[str] = documentation_type or "rfw"
-        if (
-            documentation_format is not None
-            and str(documentation_format).lower() not in VALID_DOC_FORMATS
-        ):
-            raise ValueError(
-                f"The provided documentation_format of '{documentation_format}' is not "
-                f"valid, must be one of {VALID_DOC_FORMATS}"
-            )
-        self.documentation_format: Optional[str] = documentation_format or "REST"
         self.path: Path = Path(*args, **kwargs)
 
     def partition_source_name(self, name: str) -> Tuple[str, str]:
@@ -59,8 +48,7 @@ class Source:
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}(path={self.path!r}, "
-            f"documentation_type={self.documentation_type!r}, "
-            f"documentation_format={self.documentation_format!r})"
+            f"documentation_type={self.documentation_type!r})"
         )
 
 
@@ -71,14 +59,12 @@ class SourceFile(Source):
         self,
         *args,
         documentation_type: Optional[str] = None,
-        documentation_format: Optional[str] = None,
         **kwargs,
     ) -> None:
         self._content: Optional[str] = None
         super().__init__(
             *args,
             documentation_type=documentation_type,
-            documentation_format=documentation_format,
             **kwargs,
         )
 
@@ -99,7 +85,6 @@ class Component(SourceFile):
         self,
         *args,
         documentation_type: Optional[str] = None,
-        documentation_format: Optional[str] = None,
         target_path: Optional[PathLike] = None,
         **kwargs,
     ) -> None:
@@ -107,7 +92,6 @@ class Component(SourceFile):
         super().__init__(
             *args,
             documentation_type=documentation_type,
-            documentation_format=documentation_format,
             **kwargs,
         )
 
@@ -163,13 +147,11 @@ class SourceDoc(SourceFile):
         self,
         *args,
         documentation_type: Optional[str] = None,
-        documentation_format: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(
             *args,
             documentation_type=documentation_type,
-            documentation_format=documentation_format,
             **kwargs,
         )
         self._name: Optional[str] = None
@@ -203,14 +185,12 @@ class SourceDirectory(Source):
         self,
         *args,
         documentation_type: Optional[str] = None,
-        documentation_format: Optional[str] = None,
         **kwargs,
     ) -> None:
         self._source_files: Optional[List[SourceDoc]] = None
         super().__init__(
             *args,
             documentation_type=documentation_type,
-            documentation_format=documentation_format,
             **kwargs,
         )
 
@@ -276,17 +256,13 @@ class SourceDirectory(Source):
         and names can be provided as paths or using python dot-notation.
         """
         doc_to_exclude = self._create_source_doc(name)
-        print(f"Doc to exclude: {doc_to_exclude}")
         source_files = self.source_files
         files_to_remove = []
         if doc_to_exclude.path.is_file():
-            print("Doc is a file, attempting to remove directly")
             files_to_remove.append(doc_to_exclude)
         elif doc_to_exclude.path.is_dir():
-            print("doc is a dir, attempting to remove all files in dir")
             for file in source_files:
                 if file.path.is_relative_to(doc_to_exclude.path):
-                    print(f"Found relative file to remove: {file}")
                     files_to_remove.append(file)
         for file in files_to_remove:
             try:
@@ -305,7 +281,6 @@ class SourceDirectory(Source):
                 SourceDoc(
                     f,
                     documentation_type=self.documentation_type,
-                    documentation_format=self.documentation_format,
                 )
                 for f in raw_files
                 if getattr(f, "suffix") in SOURCE_LANGUAGES.keys()

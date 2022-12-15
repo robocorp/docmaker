@@ -181,7 +181,6 @@ def generate_documentation(
     exclude=None,
     project_title=None,
     language="rfw",
-    documentation_format="rest",
     in_project=False,
 ):
     """This task generates a documentation website
@@ -216,16 +215,10 @@ def generate_documentation(
      - ``python``: interprets modules as Python modules and
        documents them as programmatic APIs.
 
-    :param documentation_format: Defaults to ``rest`` as most Python
-     libraries are written using restructured text format, but you can
-     select alternatives such as ``robot``, ``html``, or ``text``. If a
-     library specifies it's documentation format, that will be used
-     instead.
     :param in_project: Default to False. Set to True if you are invoking
      this package from inside your own robot/project and have installed
      all of this project's dependencies in your own conda.yaml.
     """
-    print("**** START ****")
     yaml_config = _parse_yaml_config()
     try:
         source_path = source_path or yaml_config.get("source_path")
@@ -234,15 +227,11 @@ def generate_documentation(
         exclude = exclude or yaml_config.get("exclude")
         project_title = project_title or yaml_config.get("project_title")
         language = language or yaml_config.get("language")
-        documentation_format = documentation_format or yaml_config.get(
-            "documentation_format"
-        )
         in_project = in_project or yaml_config.get("in_project") or False
     except AttributeError:
         pass
     source_path = _get_source_path(source_path)
     if not in_project:
-        print("DETECTED OUTSIDE OF PROJECT: MERGING DEPENDENCY FILES")
         _merge_config_files(source_path, source_robot)
         rcc_exe = _download_rcc(ctx)
         args = []
@@ -254,22 +243,18 @@ def generate_documentation(
             args.append(f"--exclude {','.join(exclude)}")
         if project_title is not None:
             args.append(f"--project-title {project_title}")
-        print("EXECUTING META ROBOT")
         ctx.run(
             f"{rcc_exe} run --force --space metarobot --robot {TEMP_ROBOT} "
             f'--task "Build documentation" --'
             f" --language {language}"
-            f" --documentation-format {documentation_format}"
             f" --in-project {' '.join(args)}",
             echo=True,
         )
     else:
-        print("INSIDE PROJECT: BEGINNING TO PARSE DOCS")
         os.environ["PYTHONPATH"] += f"{os.pathsep}{source_path}"
         source_dir = SourceDirectory(
             source_path,
             documentation_type=language,
-            documentation_format=documentation_format,
         )
         if include:
             include = _parse_commas(include)
@@ -287,7 +272,6 @@ def generate_documentation(
         root_index_component = Component(
             COMPONENT_PATH / "index.rst",
             documentation_type=language,
-            documentation_format=documentation_format,
         )
         root_index_component.customize_contents(
             project_title=title, project_title_bar="=" * len(title)
@@ -295,12 +279,10 @@ def generate_documentation(
         root_index_component.write(DOC_SOURCE_PATH)
 
         # build all source doc files from components for each sourcedoc
-        print(f"Source files to be parsed: {source_dir.source_files}")
         for doc in source_dir.source_files:
             file_component = Component(
                 COMPONENT_PATH / f"{language.lower()}_library_index.rst",
                 documentation_type=language,
-                documentation_format=documentation_format,
             )
             title = titleize(doc.name)
             file_component.customize_contents(

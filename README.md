@@ -42,11 +42,6 @@ rcc run -- --source-path path/to/source/file.py
     - ``python``: interprets modules as Python modules and
     documents them as programmatic APIs.
 
-* `documentation-format`: Defaults to ``rest`` as most Python
-    libraries are written using restructured text format, but you can
-    select alternatives such as ``robot``, ``html``, or ``text``. If a
-    library specifies it's documentation format, that will be used
-    instead.
 * `in-project`: Optional flag. Set this flag if you are invoking
     this package from inside your own robot/project and have installed
     all of this project's dependencies in your own conda.yaml.
