@@ -2,6 +2,7 @@ tasks:
   Build documentation:
     shell: invoke generate-documentation 
 
+devTasks:
   Use config:
     # You can pass a path by appending `-- path/to/config` after the rcc command.
     shell: invoke parse-yaml-config-and-run
@@ -9,7 +10,7 @@ tasks:
   Host documentation:
     shell: python -u -m http.server -d output
 
-  Clean local repo:
+  Clean:
     shell: invoke clean
 
 condaConfigFile: conda.yaml
