@@ -32,6 +32,7 @@ LIBRARIES_PATH = DOC_SOURCE_PATH / "libraries"
 SOURCE_INCLUDES = DOC_SOURCE_PATH / "include"
 LIBDOC_PATH = SOURCE_INCLUDES / "libdoc"
 LIBDOC_TEMPLATE = DOC_SOURCE_PATH / "template" / "libdoc" / "libdoc.html"
+IFRAMERESIZER_MAP = DOC_SOURCE_PATH / "template" / "iframeResizer.contentWindow.map"
 LIBSPEC_PATH = DOC_SOURCE_PATH / "libspec"
 JSON_PATH = DOC_SOURCE_PATH / "json"
 JSON_MERGE_TARGET = SOURCE_INCLUDES / "latest.json"
@@ -180,6 +181,8 @@ def generate_documentation(
     include=None,
     exclude=None,
     project_title=None,
+    copyright_info=None,
+    author_name=None,
     language="rfw",
     in_project=False,
 ):
@@ -206,6 +209,12 @@ def generate_documentation(
     :param project_title: If provided, the documentation will use this
      string as it's main title, otherwise it will Titleize the name
      of the source path's root folder.
+    :param copyright_info: If provided, the documentation will use this
+     string as the copyright information string in output. If not
+     provided, no copyright information will be included.
+    :param author_name: If provided, the documentation will use this
+     string as the author's name in output, otherwise, no author info
+     will be provided.
     :param language: Defaults to ``rfw`` for Robot Framework. This
      will read the source files as Robot Framework libraries. Allowed
      values are:
@@ -226,6 +235,8 @@ def generate_documentation(
         include = include or yaml_config.get("include")
         exclude = exclude or yaml_config.get("exclude")
         project_title = project_title or yaml_config.get("project_title")
+        copyright_info = copyright_info or yaml_config.get("copyright_info")
+        author_name = author_name or yaml_config.get("author_name")
         language = language or yaml_config.get("language")
         in_project = in_project or yaml_config.get("in_project") or False
     except AttributeError:
@@ -243,8 +254,12 @@ def generate_documentation(
             args.append(f"--exclude {','.join(exclude)}")
         if project_title is not None:
             args.append(f"--project-title {project_title}")
+        if copyright_info is not None:
+            args.append(f"--copyright-info {copyright_info}")
+        if author_name is not None:
+            args.append(f"--author-name {author_name}")
         ctx.run(
-            f"{rcc_exe} run --force --space metarobot --robot {TEMP_ROBOT} "
+            f"{rcc_exe} run --space metarobot --robot {TEMP_ROBOT} "
             f'--task "Build documentation" --'
             f" --language {language}"
             f" --in-project {' '.join(args)}",
@@ -267,14 +282,14 @@ def generate_documentation(
             source_dir.exclude_source_file(name)
 
         # write the source index file
-        title = project_title or source_path.name
-        title = f"{titleize(title)} Documentation"
+        root_title = project_title or source_path.name
+        root_title = f"{titleize(root_title)} Documentation"
         root_index_component = Component(
             COMPONENT_PATH / "index.rst",
             documentation_type=language,
         )
         root_index_component.customize_contents(
-            project_title=title, project_title_bar="=" * len(title)
+            project_title=root_title, project_title_bar="=" * len(root_title)
         )
         root_index_component.write(DOC_SOURCE_PATH)
 
@@ -308,11 +323,24 @@ def generate_documentation(
                 f"--no-patches {doc.name}"
             )
 
+        # Copy iframe resizer into libdoc source
+        shutil.copy2(IFRAMERESIZER_MAP, LIBDOC_PATH / IFRAMERESIZER_MAP.name)
         # merge json
         ctx.run(f"python {PYTHON_MERGE} {JSON_PATH} {JSON_MERGE_TARGET}")
 
+        # create conf overrides
+        overrides = [f'-D project="{root_title}"']
+        if copyright_info is not None:
+            overrides.append(f'-D copyright="{copyright_info}"')
+        if author_name is not None:
+            overrides.append(f'-D author="{author_name}"')
+
         # build docs
-        ctx.run(f"sphinx-build -aE -b html -j auto {DOC_SOURCE_PATH} {OUTPUT}")
+        ctx.run(
+            f"sphinx-build -aE -b html -j auto {' '.join(overrides)} "
+            f"{DOC_SOURCE_PATH} {OUTPUT}",
+            echo=True,
+        )
 
 
 def _parse_yaml_config(path="docmaker_config.yaml"):
