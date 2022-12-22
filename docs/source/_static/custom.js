@@ -4,7 +4,6 @@ window.addEventListener("DOMContentLoaded", function (e) {
     inPageLinks: true,
     checkOrigin: false,
     sizeWidth: true,
-    widthCalculationMethod: "max",
   };
 
   iFrameResize(options, "#libdoc");

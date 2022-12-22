@@ -7,7 +7,7 @@ rcc pull https://github.com/robocorp/docmaker
 rcc run
 ```
 
-There are several more advanced ways to configure this bot or even utilize the code as a standalone `invoke` task within your own project directly, read on for more!.
+There are several more advanced ways to configure this bot or even utilize the code as a standalone `invoke` task within your own project directly, read on for more!
 
 ## Using Parameters to Control Parsing
 
@@ -26,10 +26,12 @@ rcc run -- --source-path path/to/source/file.py
 * `include`: Optional. List of Python modules to parse from
     ``source-path``. If not included, all modules will be parsed for
     documentation. These can be provided using Python dot-notation
-    or as paths to the individual source files.
+    or as paths to the individual source files. They must be relative
+    to ``source-path``.
 * `exclude`: Optional. List of Python modules to be excluded
     from parsing. These can be provided using Python dot-notation
-    or as paths to the individual source files.
+    or as paths to the individual source files. They must be relative
+    to ``source-path``.
 * `project-title`: If provided, the documentation will use this
     string as it's main title, otherwise it will Titleize the name
     of the source path's root folder.
@@ -122,4 +124,4 @@ You may also need to combined the entries from your `PATH` and `PYTHONPATH` as w
 
 ## Advanced Invocations
 
-The above section can be used as a starting point if you want to include this robot's `tasks.py` as an [Invoke](https://www.pyinvoke.org/) script within your project. If you include this robot's dependencies in your project and then include the `tasks.py` and `documenter.py` file within your project's `libs` folder, you are able to execute the task directly from your robot's directory via the command `invoke generate-documentation`.
+The above section can be used as a starting point if you want to include this robot's `tasks.py` as an [Invoke](https://www.pyinvoke.org/) script within your project. If you include this robot's dependencies in your project and then include the `tasks.py` in your project's root folder and `documenter.py` file within your project's `libs` folder, you are able to execute the task directly from your robot's directory via the command `invoke generate-documentation`.

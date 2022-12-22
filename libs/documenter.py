@@ -218,22 +218,30 @@ class SourceDirectory(Source):
             if name[0] == ".":
                 return self.convert_name_to_path(name[1:])
             else:
-                return Path(name.replace(".", "/", count_dot_seps - 1))
+                possible_path = self.path / Path(f"{name.replace('.', '/', count_dot_seps)}")
+                if possible_path.exists():
+                    return possible_path
+                elif possible_path.with_suffix('.py').exists():
+                    return possible_path.with_suffix('.py')
+                elif possible_path.with_suffix('.robot').exists():
+                    return possible_path.with_suffix('.robot')
         else:
-            possible_path = Path(name)
+            possible_path = self.path / Path(name)
             if possible_path.is_dir():
                 return self._get_init_path_for_dir(possible_path)
             else:
                 return possible_path
 
     def _create_source_doc(self, name: Union[str, PathLike]) -> SourceDoc:
-        new_sourcedoc = SourceDoc(name)
-        if not new_sourcedoc.path.exists():
+        new_path = self.path / Path(name)
+        if not new_path.is_relative_to(self.path):
+            raise ValueError(f"The source '{name}' is not relative to the source directory.")
+        elif not new_path.exists():
             return SourceDoc(self.convert_name_to_path(name))
-        elif new_sourcedoc.path.is_dir():
-            return SourceDoc(self._get_init_path_for_dir(name))
+        elif new_path.is_dir():
+            return SourceDoc(self._get_init_path_for_dir(new_path))
         else:
-            return new_sourcedoc
+            return SourceDoc(new_path)
 
     def load_source_file(self, name: Union[str, PathLike]):
         """Loads the provided source file from within the source directory

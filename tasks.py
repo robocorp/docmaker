@@ -278,8 +278,15 @@ def generate_documentation(
 
         exclude = _parse_commas(exclude)
         exclude.append(REPO_ROOT)
+        exclude.append(source_path / "tasks.robot")
         for name in exclude:
             source_dir.exclude_source_file(name)
+
+        # I hate this but this will re-add anything included by
+        # the user
+        if include:
+            for name in include:
+                source_dir.load_source_file(name)
 
         # write the source index file
         root_title = project_title or source_path.name
@@ -293,6 +300,7 @@ def generate_documentation(
         )
         root_index_component.write(DOC_SOURCE_PATH)
 
+        print(f"Docs in source files: {source_dir.source_files!r}")
         # build all source doc files from components for each sourcedoc
         for doc in source_dir.source_files:
             file_component = Component(
