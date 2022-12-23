@@ -199,11 +199,12 @@ def generate_documentation(
      parent of the robot's root folder, if local ``source`` is empty.
     :param source_robot: Optional. Defines the ``robot.yaml`` file to
      reference from the provided source path. Defaults to ``robot.yaml``.
-    :param include: Optional. List of Python modules to parse from
-     ``source_path``. If not included, all modules will be parsed for
+    :param include: Optional. List of source files to parse from
+     ``source_path``. If not included, all source files will be parsed for
      documentation. These can be provided using Python dot-notation
-     or as paths to the individual source files.
-    :param exclude: Optional. List of Python modules to be excluded
+     or as paths to the individual source files. They must be relative
+    to ``source-path``.
+    :param exclude: Optional. List of source files to be excluded
      from parsing. These can be provided using Python dot-notation
      or as paths to the individual source files.
     :param project_title: If provided, the documentation will use this
