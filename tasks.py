@@ -1,7 +1,7 @@
 """This invoke task will automatically turn any local Python modules into
 an HTML documentation website.
 """
-import sys
+import re
 import platform
 import os
 import shutil
@@ -11,7 +11,7 @@ from typing import List, Dict
 from invoke import task
 from pathlib import Path
 from glob import glob
-from importlib import __import__
+from bs4 import BeautifulSoup
 
 # custom classes
 from documenter import Component, SourceDirectory, PathLike
@@ -32,6 +32,9 @@ LIBRARIES_PATH = DOC_SOURCE_PATH / "libraries"
 SOURCE_INCLUDES = DOC_SOURCE_PATH / "include"
 LIBDOC_PATH = SOURCE_INCLUDES / "libdoc"
 LIBDOC_TEMPLATE = DOC_SOURCE_PATH / "template" / "libdoc" / "libdoc.html"
+IFRAME_SCRIPT_PATH = (
+    DOC_SOURCE_PATH / "template" / "lib" / "iframeResizer.contentWindow.min.js"
+)
 IFRAMERESIZER_MAP = DOC_SOURCE_PATH / "template" / "iframeResizer.contentWindow.map"
 LIBSPEC_PATH = DOC_SOURCE_PATH / "libspec"
 JSON_PATH = DOC_SOURCE_PATH / "json"
@@ -173,6 +176,11 @@ def _download_rcc(ctx):
         return "./rcc"
 
 
+def _iframeresizer_script():
+    with IFRAME_SCRIPT_PATH.open("r") as script:
+        return script.read()
+
+
 @task(iterable=["include", "exclude"], aliases=["build", "docs", "build-docs"])
 def generate_documentation(
     ctx,
@@ -301,36 +309,69 @@ def generate_documentation(
         )
         root_index_component.write(DOC_SOURCE_PATH)
 
-        print(f"Docs in source files: {source_dir.source_files!r}")
         # build all source doc files from components for each sourcedoc
         for doc in source_dir.source_files:
-            file_component = Component(
-                COMPONENT_PATH / f"{language.lower()}_library_index.rst",
-                documentation_type=language,
-            )
-            title = titleize(doc.name)
-            file_component.customize_contents(
-                module_name=doc.name,
-                module_title=title,
-                module_title_bar="-" * len(title),
-            )
-            file_component.write(LIBRARIES_PATH / f"{doc.name}.rst")
+            if doc.source_language == "python":
+                file_component = Component(
+                    COMPONENT_PATH / f"{language.lower()}_library_index.rst",
+                    documentation_type=language,
+                )
+                title = titleize(doc.name)
+                file_component.customize_contents(
+                    module_name=doc.name,
+                    module_title=title,
+                    module_title_bar="-" * len(title),
+                )
+                file_component.write(LIBRARIES_PATH / f"{doc.name}.rst")
 
-            # build libdoc for this source
-            ctx.run(
-                f"docgen --format html --output {LIBDOC_PATH} "
-                f"--template {LIBDOC_TEMPLATE} {doc.name}"
-            )
-            # build libspec for this source
-            ctx.run(
-                f"docgen --format libspec --output {LIBSPEC_PATH} "
-                f"--no-patches {doc.name}"
-            )
-            # build json docs for this source
-            ctx.run(
-                f"docgen --format json-html --output {JSON_PATH} "
-                f"--no-patches {doc.name}"
-            )
+                # build libdoc for this source
+                ctx.run(
+                    f"docgen --format html --output {LIBDOC_PATH} "
+                    f"--template {LIBDOC_TEMPLATE} {doc.name}"
+                )
+                # build libspec for this source
+                ctx.run(
+                    f"docgen --format libspec --output {LIBSPEC_PATH} "
+                    f"--no-patches {doc.name}"
+                )
+                # build json docs for this source
+                ctx.run(
+                    f"docgen --format json-html --output {JSON_PATH} "
+                    f"--no-patches {doc.name}"
+                )
+            elif doc.source_language == "rfw":
+                file_component = Component(
+                    COMPONENT_PATH / f"rfw_library_no_api_index.rst",
+                    documentation_type=language,
+                )
+                title = titleize(doc.name)
+                file_component.customize_contents(
+                    module_name=doc.name,
+                    module_title=title,
+                    module_title_bar="-" * len(title),
+                )
+                file_component.write(LIBRARIES_PATH / f"{doc.name}.rst")
+
+                # build libdoc
+                libdoc_output_path = LIBDOC_PATH / doc.path.with_suffix(".html").name
+                ctx.run(f"libdoc {doc.path} {libdoc_output_path}")
+                with libdoc_output_path.open("r+") as out_libdoc:
+                    libdoc_soup = BeautifulSoup(out_libdoc, "html.parser")
+                    script_tag = libdoc_soup.new_tag("script", type="text/javascript")
+                    script_tag.string = _iframeresizer_script()
+                    sibling = libdoc_soup.find(
+                        "script", string=re.compile(r"jQuery Highlight plugin")
+                    )
+                    sibling.insert_after(script_tag)
+                    out_libdoc.write(str(libdoc_soup))
+                # build libspec
+                ctx.run(
+                    f"libdoc {doc.path} {LIBSPEC_PATH / doc.path.with_suffix('.libspec').name}"
+                )
+                # build json
+                ctx.run(
+                    f"libdoc {doc.path} {JSON_PATH / doc.path.with_suffix('.json').name}"
+                )
 
         # Copy iframe resizer into libdoc source
         shutil.copy2(IFRAMERESIZER_MAP, LIBDOC_PATH / IFRAMERESIZER_MAP.name)
