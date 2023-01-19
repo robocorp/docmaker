@@ -1,0 +1,52 @@
+## Uncomment entries in this file and update them to pass parameters to the
+## robot via this yaml file instead of via command line. If both are passed,
+## values set at the command line take precedence.
+##
+## Possible entries are commented with only one hashtag.
+
+## Defines a path to source files. All files within
+## this path will be parsed for documentation.
+# source_path: path/to/source/
+
+## Defines the ``robot.yaml`` file to reference from the provided source path.
+## This should be a relative path from the source path above.
+# source_robot: robot.yaml
+
+## List of Python modules to parse from source_path. If excluded, will parse all
+## modules in source_path
+# include:
+#  - library_to_include
+#  - second_lib_to_include
+
+## List of Python modules to be excluded from parsing. These can be provided
+## using Python dot-notation or as paths to the individual source files.
+# exclude:
+#  - library_to_exclude
+#  - second_lib_to_exclude
+
+
+## The documentation will use this title as the resulting website's main title,
+## you can remove to use the source_path's directory name.
+# project_title: My Libraries
+
+## The documentation will use this string as the copyright information string in 
+## output. If not provided, no copyright information will be included.
+# copyright_info: 2022 MyCompany, Inc.
+
+## The documentation will use this string as the author's name in output, 
+## otherwise, no author info will be provided.
+# author_name: MyCompany, Inc.
+
+## Defaults to ``rfw`` for Robot Framework. This
+## will read the source files as Robot Framework libraries. Allowed
+## values are:
+## - ``rfw``: interprets modules and classes as Robot Framework
+##   libraries and generated keyword documentation.
+## - ``python``: interprets modules as Python modules and
+##   documents them as programmatic APIs.
+# language: rfw
+
+## Default to False. Set to True if you are invoking
+## this package from inside your own robot/project and have installed
+## all of this project's dependencies in your own conda.yaml.
+# in_project: false

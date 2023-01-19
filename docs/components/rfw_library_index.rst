@@ -6,7 +6,7 @@ Keywords
 
 .. raw:: html
 
-   <iframe id="libdoc" src="./libdoc/{module_name}.html"></iframe>
+   <iframe id="libdoc" src="../libdoc/{module_name}.html"></iframe>
 
 Programming API
 ^^^^^^^^^^^^^^^

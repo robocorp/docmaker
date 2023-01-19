@@ -21,3 +21,10 @@ docs/source/include/libdoc
 docs/source/libspec
 docs/source/include/latest.json
 docs/source/json/
+source/*
+docs/source/libraries/*
+dist/
+docs/source/index.rst
+rcc.exe
+temp_conda.yaml
+temp_robot.yaml

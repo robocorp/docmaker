@@ -1,10 +1,17 @@
-# For more details on the format and content:
-# https://github.com/robocorp/rcc/blob/master/docs/recipes.md#what-is-in-robotyaml
-
 tasks:
-  # Task names here are used when executing the bots, so renaming these is recommended.
-  Run Python:
-    shell: python task.py
+  Build documentation:
+    shell: invoke generate-documentation 
+
+devTasks:
+  Use config:
+    # You can pass a path by appending `-- path/to/config` after the rcc command.
+    shell: invoke parse-yaml-config-and-run
+
+  Host documentation:
+    shell: python -u -m http.server -d output
+
+  Clean:
+    shell: invoke clean
 
 condaConfigFile: conda.yaml
 

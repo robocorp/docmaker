@@ -11,12 +11,14 @@ dependencies:
   - python=3.9.13               # https://pyreadiness.org/3.9/ 
   - sphinx=5.3.0                # https://github.com/conda-forge/sphinx-feedstock
   - invoke=1.7.3                # https://www.pyinvoke.org/changelog.html#{}
+  - pyyaml=5.4.1                # https://pyyaml.org/wiki/PyYAML
+  - beautifulsoup4=4.11.1       # https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 
   # development dependencies
   - black=22.10.0               # https://black.readthedocs.io/en/stable/change_log.html
   - pytest=7.2.0                # https://docs.pytest.org/en/latest/
   - mock=4.0.3                  # https://mock.readthedocs.io/en/latest/
-  - pytest-mock==3.10.0          # https://github.com/pytest-dev/pytest-mock
+  - pytest-mock=3.10.0          # https://github.com/pytest-dev/pytest-mock
 
   # PIP dependencies
   - pip=22.1.2                  # https://pip.pypa.io/en/stable/news/
@@ -24,4 +26,4 @@ dependencies:
       # Define pip packages here -> https://pypi.org/
       - robotframework-docgen==0.15.0    # https://github.com/robocorp/robotframework-docgen
       - robotframeworklexer==1.1         # https://github.com/robotframework/pygmentslexer
-
+      - inflection==0.5.1                # https://inflection.readthedocs.io/en/latest/#changelog
