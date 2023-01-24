@@ -209,30 +209,33 @@ class SourceDirectory(Source):
         else:
             return dir_path
 
-    def convert_name_to_path(self, name: str) -> Path:
+    def convert_name_to_path(self, name: PathLike) -> Path:
         """Converts a name to a path assuming the name may include
         a ``.`` to indicate relative naming compared to path sep.
         """
-        count_dot_seps = name.count(".")
-        if count_dot_seps > 0:
-            if name[0] == ".":
-                return self.convert_name_to_path(name[1:])
-            else:
-                possible_path = self.path / Path(f"{name.replace('.', '/', count_dot_seps)}")
-                if possible_path.exists():
-                    return possible_path
-                elif possible_path.with_suffix('.py').exists():
-                    return possible_path.with_suffix('.py')
-                elif possible_path.with_suffix('.robot').exists():
-                    return possible_path.with_suffix('.robot')
+        if isinstance(name, Path):
+            return name
         else:
-            possible_path = self.path / Path(name)
-            if possible_path.is_dir():
-                return self._get_init_path_for_dir(possible_path)
+            count_dot_seps = name.count(".")
+            if count_dot_seps > 0:
+                if name[0] == ".":
+                    return self.convert_name_to_path(name[1:])
+                else:
+                    possible_path = self.path / Path(f"{name.replace('.', '/', count_dot_seps)}")
+                    if possible_path.exists():
+                        return possible_path
+                    elif possible_path.with_suffix('.py').exists():
+                        return possible_path.with_suffix('.py')
+                    elif possible_path.with_suffix('.robot').exists():
+                        return possible_path.with_suffix('.robot')
             else:
-                return possible_path
+                possible_path = self.path / Path(name)
+                if possible_path.is_dir():
+                    return self._get_init_path_for_dir(possible_path)
+                else:
+                    return possible_path
 
-    def _create_source_doc(self, name: Union[str, PathLike]) -> SourceDoc:
+    def _create_source_doc(self, name: PathLike) -> SourceDoc:
         new_path = self.path / Path(name)
         if not new_path.is_relative_to(self.path):
             raise ValueError(f"The source '{name}' is not relative to the source directory.")
