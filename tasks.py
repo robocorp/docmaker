@@ -268,7 +268,7 @@ def generate_documentation(
         if author_name is not None:
             args.append(f'--author-name "{author_name}"')
         ctx.run(
-            f"{rcc_exe} run --space metarobot --robot {TEMP_ROBOT} "
+            f'{rcc_exe} run --space metarobot --robot "{TEMP_ROBOT}" '
             f'--task "Build documentation" --'
             f" --language {language}"
             f" --in-project {' '.join(args)}",
@@ -326,18 +326,18 @@ def generate_documentation(
 
                 # build libdoc for this source
                 ctx.run(
-                    f"docgen --format html --output {LIBDOC_PATH} "
-                    f"--template {LIBDOC_TEMPLATE} {doc.name}"
+                    f'docgen --format html --output "{LIBDOC_PATH}" '
+                    f'--template "{LIBDOC_TEMPLATE}" {doc.name}'
                 )
                 # build libspec for this source
                 ctx.run(
-                    f"docgen --format libspec --output {LIBSPEC_PATH} "
-                    f"--no-patches {doc.name}"
+                    f'docgen --format libspec --output "{LIBSPEC_PATH}" '
+                    f'--no-patches {doc.name}'
                 )
                 # build json docs for this source
                 ctx.run(
-                    f"docgen --format json-html --output {JSON_PATH} "
-                    f"--no-patches {doc.name}"
+                    f'docgen --format json-html --output "{JSON_PATH}" '
+                    f'--no-patches {doc.name}'
                 )
             elif doc.source_language == "rfw":
                 file_component = Component(
@@ -354,7 +354,7 @@ def generate_documentation(
 
                 # build libdoc
                 libdoc_output_path = LIBDOC_PATH / doc.path.with_suffix(".html").name
-                ctx.run(f"libdoc {doc.path} {libdoc_output_path}")
+                ctx.run(f'libdoc "{doc.path}" "{libdoc_output_path}"')
                 with libdoc_output_path.open("r+") as out_libdoc:
                     libdoc_soup = BeautifulSoup(out_libdoc, "html.parser")
                     script_tag = libdoc_soup.new_tag("script", type="text/javascript")
@@ -366,17 +366,17 @@ def generate_documentation(
                     out_libdoc.write(str(libdoc_soup))
                 # build libspec
                 ctx.run(
-                    f"libdoc {doc.path} {LIBSPEC_PATH / doc.path.with_suffix('.libspec').name}"
+                    f'libdoc "{doc.path}" "{LIBSPEC_PATH / doc.path.with_suffix(".libspec").name}"'
                 )
                 # build json
                 ctx.run(
-                    f"libdoc {doc.path} {JSON_PATH / doc.path.with_suffix('.json').name}"
+                    f'libdoc "{doc.path}" "{JSON_PATH / doc.path.with_suffix(".json").name}"'
                 )
 
         # Copy iframe resizer into libdoc source
         shutil.copy2(IFRAMERESIZER_MAP, LIBDOC_PATH / IFRAMERESIZER_MAP.name)
         # merge json
-        ctx.run(f"python {PYTHON_MERGE} {JSON_PATH} {JSON_MERGE_TARGET}")
+        ctx.run(f'python "{PYTHON_MERGE}" "{JSON_PATH}" "{JSON_MERGE_TARGET}"')
 
         # create conf overrides
         overrides = [f'-D project="{root_title}"']
@@ -388,7 +388,7 @@ def generate_documentation(
         # build docs
         ctx.run(
             f"sphinx-build -aE -b html -j auto {' '.join(overrides)} "
-            f"{DOC_SOURCE_PATH} {OUTPUT}",
+            f'"{DOC_SOURCE_PATH}" "{OUTPUT}"',
             echo=True,
         )
 
