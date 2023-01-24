@@ -256,17 +256,17 @@ def generate_documentation(
         rcc_exe = _download_rcc(ctx)
         args = []
         if source_path is not None:
-            args.append(f"--source-path {source_path}")
+            args.append(f'--source-path "{source_path}"')
         if len(include) > 0:
-            args.append(f"--include {','.join(include)}")
+            args.append(f'--include "{",".join(include)}"')
         if len(exclude) > 0:
-            args.append(f"--exclude {','.join(exclude)}")
+            args.append(f'--exclude "{",".join(exclude)}"')
         if project_title is not None:
-            args.append(f"--project-title {project_title}")
+            args.append(f'--project-title "{project_title}"')
         if copyright_info is not None:
-            args.append(f"--copyright-info {copyright_info}")
+            args.append(f'--copyright-info "{copyright_info}"')
         if author_name is not None:
-            args.append(f"--author-name {author_name}")
+            args.append(f'--author-name "{author_name}"')
         ctx.run(
             f"{rcc_exe} run --space metarobot --robot {TEMP_ROBOT} "
             f'--task "Build documentation" --'
