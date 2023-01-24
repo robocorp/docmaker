@@ -17,25 +17,25 @@ The underlying task allows for several parameters which you can use to control t
 rcc run -- --source-path path/to/source/file.py
 ```
 
-* `source-path`: Optional. Defines a path to source files. All
+* `--source-path`: Optional. Defines a path to source files. All
     files within this path will be parsed for documentation. Defaults
     to local directory ``source`` in robot's root folder, or the
     parent of the robot's root folder, if local ``source`` is empty.
-* `source-robot`: Optional. Defines the ``robot.yaml`` file to
+* `--source-robot`: Optional. Defines the ``robot.yaml`` file to
     reference from the provided source path. Defaults to ``robot.yaml``.
-* `include`: Optional. List of source files to parse from
+* `--include`: Optional. List of source files to parse from
     ``source-path``. If not included, all source files will be parsed for
     documentation. These can be provided using Python dot-notation
     or as paths to the individual source files. They must be relative
     to ``source-path``.
-* `exclude`: Optional. List of source files to be excluded
+* `--exclude`: Optional. List of source files to be excluded
     from parsing. These can be provided using Python dot-notation
     or as paths to the individual source files. They must be relative
     to ``source-path``.
-* `project-title`: If provided, the documentation will use this
+* `--project-title`: If provided, the documentation will use this
     string as it's main title, otherwise it will Titleize the name
     of the source path's root folder.
-* `language`: Defaults to ``rfw`` for Robot Framework. This
+* `--language`: Defaults to ``rfw`` for Robot Framework. This
     will read the source files as Robot Framework libraries. Allowed
     values are:
 
@@ -44,7 +44,7 @@ rcc run -- --source-path path/to/source/file.py
     - ``python``: interprets modules as Python modules and
     documents them as programmatic APIs.
 
-* `in-project`: Optional flag. Set this flag if you are invoking
+* `--in-project`: Optional flag. Set this flag if you are invoking
     this package from inside your own robot/project and have installed
     all of this project's dependencies in your own conda.yaml.
 
