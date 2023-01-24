@@ -3,7 +3,7 @@
 This robot can parse Robot Framework and Python source files and create a documentation website based on the documentation written into those source files. The most basic way to utilize this bot is to create a folder within your robot called `docmaker` and then `cd` into it. You would then use the following `rcc` command to pull this robot and run it. It will attempt to create a documentation website based on your robot repo.
 
 ```shell
-rcc pull https://github.com/robocorp/docmaker
+rcc pull github.com/robocorp/docmaker
 rcc run
 ```
 
